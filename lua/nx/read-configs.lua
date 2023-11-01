@@ -5,7 +5,8 @@ local console = (require 'nx.logging')
 
 local _M = {}
 
-function _M.scandir(directory, callback)
+function _M.scandir(directory_rel, callback)
+    local directory = _G.nx.nx_root .. '/' .. directory_rel
     local current_directory = vim.loop.cwd()
 
     console.log('Scanning ' .. directory)
@@ -33,7 +34,11 @@ function _M.scandir(directory, callback)
     })
 end
 
-function _M.rf(fname, callback)
+function _M.rf(fname_rel, callback)
+    local fname = _G.nx.nx_root .. '/' .. fname_rel
+    if vim.fn.filereadable(fname) ~= 1 then
+        fname = fname_rel
+    end
     console.log('Reading ' .. fname)
 
     vim.loop.fs_open(fname, 'r', 438, function(_, fd)
@@ -66,14 +71,14 @@ function _M.rf(fname, callback)
 end
 
 function _M.read_nx(callback)
-    _M.rf(_G.nx.nx_root .. '/nx.json', function(data, found)
+    _M.rf('nx.json', function(data, found)
         _G.nx.nx = data
         callback(found)
     end)
 end
 
 function _M.read_package_json(callback)
-    _M.rf(_G.nx.nx_root .. '/package.json', function(data)
+    _M.rf('package.json', function(data)
         _G.nx.package_json = data
         callback()
     end)
@@ -106,13 +111,13 @@ function _M.read_workspace_generators(callback)
     local gens = {}
 
     console.log 'Reading workspace generators'
-    _M.scandir(_G.nx.nx_root .. '/tools/generators', function(files)
+    _M.scandir('tools/generators', function(files)
         local count = #files
         local loadedCount = 0
 
         for _, value in ipairs(files) do
             _M.rf(
-                _G.nx.nx_root .. '/tools/generators/' .. value .. '/schema.json',
+                'tools/generators/' .. value .. '/schema.json',
                 function(schema)
                     if schema then
                         table.insert(gens, {
@@ -146,7 +151,7 @@ function _M.read_workspace_generators(callback)
     local gens = {}
 
     console.log 'Reading workspace generators'
-    _M.scandir(_G.nx.nx_root .. '/tools/generators', function(files)
+    _M.scandir('tools/generators', function(files)
         local count = #files
         local loadedCount = 0
 
@@ -159,7 +164,7 @@ function _M.read_workspace_generators(callback)
 
         for _, file in ipairs(files) do
             _M.rf(
-                _G.nx.nx_root .. '/tools/generators/' .. file .. '/schema.json',
+                'tools/generators/' .. file .. '/schema.json',
                 function(schema)
                     if schema then
                         table.insert(gens, {
@@ -262,11 +267,11 @@ function _M.read_external_generators(callback)
     end
 
     for _, value in ipairs(deps) do
-        _M.rf(_G.nx.nx_root .. '/node_modules/' .. value .. '/package.json', function(f)
+        _M.rf('node_modules/' .. value .. '/package.json', function(f)
             local function handel_schematic_file(field)
                 if f[field] then
                     _M.rf(
-                        _G.nx.nx_root .. '/node_modules/' .. value .. '/' .. f[field],
+                        'node_modules/' .. value .. '/' .. f[field],
                         function(schematics)
                             if schematics and schematics.generators then
                                 local genCount = 0
@@ -276,7 +281,7 @@ function _M.read_external_generators(callback)
                                     genCount = genCount + 1
 
                                     _M.rf(
-                                        _G.nx.nx_root .. '/node_modules/'
+                                        'node_modules/'
                                         .. value
                                         .. '/'
                                         .. gen.schema,

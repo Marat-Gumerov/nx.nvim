@@ -33,8 +33,8 @@ function _M.terminal_cmd()
     return function(command)
         console.log 'Running command:'
         console.log(command)
-
-        vim.cmd('terminal ' .. 'cd ' .. _G.nx.nx_root ' && ' .. command)
+        local full = 'cd ' .. _G.nx.nx_root .. ' && ' .. command
+        vim.cmd('terminal ' .. full)
     end
 end
 
