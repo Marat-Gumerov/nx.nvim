@@ -30,10 +30,16 @@ function _M.toggleterm_runner(config)
 end
 
 function _M.terminal_cmd()
-    return function(command)
+    return function(opts)
+        local cmd = opts
+        local cwd = _G.nx.nx_root
+        if (type(opts) == 'table') then
+            cmd = opts.cmd
+            cwd = opts.cwd or cwd
+        end
         console.log 'Running command:'
-        console.log(command)
-        local full = 'cd ' .. _G.nx.nx_root .. ' && ' .. command
+        console.log(cmd)
+        local full = 'cd ' .. cwd .. ' && ' .. cmd
         vim.cmd('terminal ' .. full)
     end
 end
