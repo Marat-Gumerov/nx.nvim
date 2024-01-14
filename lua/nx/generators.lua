@@ -59,6 +59,15 @@ _M.run_generator = function(generator, opts)
         local s = _G.nx.nx_cmd_root .. ' ' .. generator.run_cmd
 
         for key, value in pairs(form_result) do
+            if (value == '$cwd') then
+                local root = _G.nx.nx_root
+                local cwd = opts.cwd or root
+                cwd = cwd:sub(root:len() + 1)
+                if (cwd:len() > 0) then
+                    value = cwd
+                end
+            end
+
             if value ~= nil then
                 s = s .. ' --' .. key .. '=' .. tostring(value)
             end
